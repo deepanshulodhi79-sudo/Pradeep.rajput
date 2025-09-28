@@ -1,27 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Bulk Mailer</title>
+    <meta charset="UTF-8">
+    <title>Bulk Mail Sender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; margin-bottom: 20px; }
+        form div { margin-bottom: 15px; display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="password"], textarea { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        textarea { resize: vertical; height: 100px; }
+        button { padding: 10px 20px; background: #28a745; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #218838; }
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 5px; background: #e9ecef; }
+        .count { font-weight: bold; }
+    </style>
 </head>
 <body>
+<div class="container">
     <h2>Bulk Mail Sender</h2>
 
     {% if message %}
-        <p><strong>{{ message }}</strong></p>
+        <div class="message">{{ message }}</div>
     {% endif %}
 
-    <form action="/send" method="post">
-        Name: <input type="text" name="firstName" value="{{ formData.firstName or '' }}"><br>
-        Sender Email: <input type="email" name="sentFrom" value="{{ formData.sentFrom or '' }}"><br>
-        App Password: <input type="password" name="appPassword"><br>
-        Subject: <input type="text" name="subject" value="{{ formData.subject or '' }}"><br>
-        Message:<br>
-        <textarea name="body">{{ formData.body or '' }}</textarea><br>
-        Bulk Emails (one per line):<br>
-        <textarea name="bulkMails">{{ formData.bulkMails or '' }}</textarea><br>
-        <button type="submit">Send Emails</button>
+    <form action="{{ url_for('send_mail') }}" method="POST">
+        <div>
+            <label for="firstName">Sender Name</label>
+            <input type="text" id="firstName" name="firstName" value="{{ formData.firstName | default('') }}" required>
+        </div>
+
+        <div>
+            <label for="sentFrom">Sender Email</label>
+            <input type="text" id="sentFrom" name="sentFrom" value="{{ formData.sentFrom | default('') }}" required>
+        </div>
+
+        <div>
+            <label for="appPassword">App Password</label>
+            <input type="password" id="appPassword" name="appPassword" value="{{ formData.appPassword | default('') }}" required>
+        </div>
+
+        <div>
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" value="{{ formData.subject | default('') }}">
+        </div>
+
+        <div>
+            <label for="body">Message Body</label>
+            <textarea id="body" name="body">{{ formData.body | default('') }}</textarea>
+        </div>
+
+        <div>
+            <label for="bulkMails">Bulk Email IDs (one per line)</label>
+            <textarea id="bulkMails" name="bulkMails">{{ formData.bulkMails | default('') }}</textarea>
+        </div>
+
+        <div>
+            <button type="submit">Send Emails</button>
+        </div>
     </form>
 
-    <p><strong>{{ bulk_count }}</strong> recipient mail addresses are entered</p>
+    {% if formData.bulkMails %}
+        {% set bulk_count = formData.bulkMails.splitlines() | length %}
+        <p class="count"><strong>{{ bulk_count }}</strong> recipient mail addresses are entered</p>
+    {% endif %}
+</div>
 </body>
 </html>
