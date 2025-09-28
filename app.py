@@ -12,8 +12,8 @@ app = Flask(__name__)
 app.secret_key = 'bulk-mailer-secret-please-change'
 
 # Hardcoded login
-HARD_USERNAME = 'Yatendra Rajput'
-HARD_PASSWORD = 'Yattu@882'
+HARD_USERNAME = 'Pradeep Rajput'
+HARD_PASSWORD = 'Pappu@882'
 
 # Login routes
 @app.route('/login', methods=['GET', 'POST'])
