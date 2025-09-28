@@ -58,20 +58,29 @@
       </div>
 
       <div style="clear:both; margin-top:20px">
-        <p><strong>{{ formData.bulkMails | default('') | split('\n') | length }}</strong> recipient mail addresses are entered</p>
+        <p>
+          <strong>{{ bulk_count }}</strong> valid recipient email addresses entered
+          {% if count > bulk_count %}
+            ({{ count - bulk_count }} invalid skipped)
+          {% endif %}
+        </p>
         <button class="btn btn-success">Send</button>
       </div>
     </form>
   </div>
 
   <script>
+    // live count of emails typed
     const bulkArea = document.getElementById('bulkMails');
     const bulkCount = document.getElementById('bulkCount');
+
     function updateCount() {
       if (!bulkArea) return;
-      const arr = bulkArea.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
+      const text = bulkArea.value;
+      const arr = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
       bulkCount.textContent = arr.length + ' IDs entered';
     }
+
     if (bulkArea) {
       bulkArea.addEventListener('input', updateCount);
       updateCount();
