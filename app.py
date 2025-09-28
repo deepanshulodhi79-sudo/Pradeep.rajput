@@ -8,14 +8,14 @@ import os
 app = Flask(__name__)
 app.secret_key = 'bulk-mailer-secret-please-change'
 
-HARD_USERNAME = 'Pradeep Rajput'
-HARD_PASSWORD = 'Pappu@882'
+HARD_USERNAME = 'Yatendra Rajput'
+HARD_PASSWORD = 'Yattu@882'
 
 EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 MAX_PER_BATCH = 30
-
 PORT = int(os.environ.get("PORT", 5000))
 
+# Login routes
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -33,6 +33,7 @@ def logout():
     session.pop('user', None)
     return redirect('/login')
 
+# Login required decorator
 def require_login(f):
     def wrapper(*args, **kwargs):
         if 'user' not in session:
@@ -41,11 +42,13 @@ def require_login(f):
     wrapper.__name__ = f.__name__
     return wrapper
 
+# Main form
 @app.route('/', methods=['GET'])
 @require_login
 def index():
     return render_template('form.html', message=None, count=0, formData={})
 
+# Send mails
 @app.route('/send', methods=['POST'])
 @require_login
 def send():
@@ -68,7 +71,7 @@ def send():
     validRecipients = [r for r in limitedRecipients if EMAIL_REGEX.match(r)]
     invalidRecipients = [r for r in limitedRecipients if not EMAIL_REGEX.match(r)]
 
-    # Snapshot to prevent overwrite during async sending
+    # Snapshot to prevent overwrite during sending
     snapshot = {
         'firstName': firstName,
         'senderEmail': senderEmail,
@@ -109,4 +112,4 @@ def send():
         return render_template('form.html', message=f"Error sending: {e}", count=len(recipients), formData=request.form)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT)
+    app.run(host='0.0.0.0', port=PORT, debug=True)
