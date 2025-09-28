@@ -25,40 +25,40 @@
       <div class="left-col">
         <div class="form-group">
           <label>First Name (Sender Name)</label>
-          <input name="firstName" class="form-control" value="{{ formData.firstName or '' }}" />
+          <input name="firstName" class="form-control" value="{{ formData.firstName | default('') }}" />
         </div>
 
         <div class="form-group">
           <label>App Password (leave blank to use server env)</label>
-          <input name="appPassword" class="form-control" value="{{ formData.appPassword or '' }}" />
+          <input name="appPassword" class="form-control" value="{{ formData.appPassword | default('') }}" />
         </div>
 
         <div class="form-group">
           <label>Body</label>
-          <textarea name="body" class="form-control" rows="10">{{ formData.body or '' }}</textarea>
+          <textarea name="body" class="form-control" rows="10">{{ formData.body | default('') }}</textarea>
         </div>
       </div>
 
       <div class="right-col">
         <div class="form-group">
           <label>Sent From (your sender email)</label>
-          <input name="sentFrom" class="form-control" value="{{ formData.sentFrom or '' }}" />
+          <input name="sentFrom" class="form-control" value="{{ formData.sentFrom | default('') }}" />
         </div>
 
         <div class="form-group">
           <label>Subject</label>
-          <input name="subject" class="form-control" value="{{ formData.subject or '' }}" />
+          <input name="subject" class="form-control" value="{{ formData.subject | default('') }}" />
         </div>
 
         <div class="form-group">
           <label>Bulk Mails (one per line or comma separated) — max 30</label>
-          <textarea id="bulkMails" name="bulkMails" class="form-control" rows="12">{{ formData.bulkMails or '' }}</textarea>
+          <textarea id="bulkMails" name="bulkMails" class="form-control" rows="12">{{ formData.bulkMails | default('') }}</textarea>
           <small id="bulkCount"></small>
         </div>
       </div>
 
       <div style="clear:both; margin-top:20px">
-        <p><strong>{{ formData.bulkMails | default('', true).split('\n') | length }}</strong> recipient mail addresses are entered</p>
+        <p><strong>{{ formData.bulkMails | default('') | split('\n') | length }}</strong> recipient mail addresses are entered</p>
         <button class="btn btn-success">Send</button>
       </div>
     </form>
