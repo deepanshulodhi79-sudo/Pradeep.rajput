@@ -2,70 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk Mail Sender</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; margin-bottom: 20px; }
-        form div { margin-bottom: 15px; display: flex; flex-direction: column; }
-        label { margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"], textarea { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
-        textarea { resize: vertical; height: 100px; }
-        button { padding: 10px 20px; background: #28a745; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #218838; }
-        .message { padding: 10px; margin-bottom: 15px; border-radius: 5px; background: #e9ecef; }
-        .count { font-weight: bold; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f2f2f2;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            max-width: 700px;
+            margin: auto;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 6px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 15px;
+            color: green;
+        }
+        .bulk-count {
+            margin-top: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <h2>Bulk Mail Sender</h2>
+    <div class="container">
+        <h2>Bulk Mail Sender</h2>
 
-    {% if message %}
-        <div class="message">{{ message }}</div>
-    {% endif %}
+        {% if message %}
+            <p class="message">{{ message }}</p>
+        {% endif %}
 
-    <form action="{{ url_for('send_mail') }}" method="POST">
-        <div>
-            <label for="firstName">Sender Name</label>
-            <input type="text" id="firstName" name="firstName" value="{{ formData.firstName | default('') }}" required>
-        </div>
+        <form action="{{ url_for('send') }}" method="POST">
+            <label for="firstName">Sender Name:</label>
+            <input type="text" name="firstName" id="firstName" value="{{ formData.firstName | default('') }}" required>
 
-        <div>
-            <label for="sentFrom">Sender Email</label>
-            <input type="text" id="sentFrom" name="sentFrom" value="{{ formData.sentFrom | default('') }}" required>
-        </div>
+            <label for="sentFrom">Sender Email:</label>
+            <input type="email" name="sentFrom" id="sentFrom" value="{{ formData.sentFrom | default('') }}" required>
 
-        <div>
-            <label for="appPassword">App Password</label>
-            <input type="password" id="appPassword" name="appPassword" value="{{ formData.appPassword | default('') }}" required>
-        </div>
+            <label for="appPassword">App Password:</label>
+            <input type="password" name="appPassword" id="appPassword" value="{{ formData.appPassword | default('') }}" required>
 
-        <div>
-            <label for="subject">Subject</label>
-            <input type="text" id="subject" name="subject" value="{{ formData.subject | default('') }}">
-        </div>
+            <label for="subject">Subject:</label>
+            <input type="text" name="subject" id="subject" value="{{ formData.subject | default('') }}">
 
-        <div>
-            <label for="body">Message Body</label>
-            <textarea id="body" name="body">{{ formData.body | default('') }}</textarea>
-        </div>
+            <label for="body">Message Body:</label>
+            <textarea name="body" id="body" rows="5">{{ formData.body | default('') }}</textarea>
 
-        <div>
-            <label for="bulkMails">Bulk Email IDs (one per line)</label>
-            <textarea id="bulkMails" name="bulkMails">{{ formData.bulkMails | default('') }}</textarea>
-        </div>
+            <label for="bulkMails">Bulk Email IDs (one per line):</label>
+            <textarea name="bulkMails" id="bulkMails" rows="5">{{ formData.bulkMails | default('') }}</textarea>
 
-        <div>
+            <div class="bulk-count">
+                <p><strong>{{ bulk_count }}</strong> recipient mail addresses are entered</p>
+            </div>
+
             <button type="submit">Send Emails</button>
-        </div>
-    </form>
-
-    {% if formData.bulkMails %}
-        {% set bulk_count = formData.bulkMails.splitlines() | length %}
-        <p class="count"><strong>{{ bulk_count }}</strong> recipient mail addresses are entered</p>
-    {% endif %}
-</div>
+        </form>
+    </div>
 </body>
 </html>
