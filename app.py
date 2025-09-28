@@ -8,8 +8,8 @@ import os
 app = Flask(__name__)
 app.secret_key = 'bulk-mailer-secret-please-change'
 
-HARD_USERNAME = 'Yatendra Rajput'
-HARD_PASSWORD = 'Yattu@882'
+HARD_USERNAME = 'Pradeep Rajput'
+HARD_PASSWORD = 'Pappu@882'
 
 EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 MAX_PER_BATCH = 30
