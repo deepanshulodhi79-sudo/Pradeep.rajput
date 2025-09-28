@@ -1,23 +1,32 @@
-import os
-import threading
-from flask import Flask, render_template, request, session, redirect
+# app.py
+from flask import Flask, render_template, request, redirect, session
 from dotenv import load_dotenv
+import os
 import smtplib
 from email.mime.text import MIMEText
+from threading import Thread
 
-# Load env variables
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'bulk-mailer-secret-please-change'
+app.secret_key = os.getenv('SECRET_KEY', 'super-secret-key')
 
 # Hardcoded login
 HARD_USERNAME = 'Pradeep Rajput'
 HARD_PASSWORD = 'Pappu@882'
 
-# Login routes
+# Login decorator
+def require_login(f):
+    def wrapper(*args, **kwargs):
+        if 'user' in session and session['user'] == HARD_USERNAME:
+            return f(*args, **kwargs)
+        return redirect('/login')
+    wrapper.__name__ = f.__name__
+    return wrapper
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -25,89 +34,69 @@ def login():
             session['user'] = username
             return redirect('/')
         else:
-            return render_template('login.html', error='Invalid credentials')
-    return render_template('login.html', error=None)
+            error = 'Invalid credentials'
+    return render_template('login.html', error=error)
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
 
-# Login required decorator
-def login_required(f):
-    from functools import wraps
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if session.get('user') == HARD_USERNAME:
-            return f(*args, **kwargs)
-        return redirect('/login')
-    return wrapper
-
-# Main form
 @app.route('/', methods=['GET'])
-@login_required
+@require_login
 def index():
-    return render_template('form.html', message=None, count=0, bulk_count=0, formData={})
+    return render_template('form.html', message=None, bulk_count=0, formData={})
 
-# Background mail sending function
+# Mail sending function (background thread)
 def send_emails(snapshot):
-    sender_email = snapshot['senderEmail']
-    sender_password = snapshot['senderAppPassword']
+    sender_email = snapshot['sender_email']
+    sender_pass = snapshot['sender_pass']
     subject = snapshot['subject']
     body = snapshot['body']
-    first_name = snapshot['firstName']
+    first_name = snapshot['first_name']
     recipients = snapshot['recipients']
 
     for to_email in recipients:
         try:
             msg = MIMEText(body)
-            msg['Subject'] = subject
+            msg['Subject'] = subject or '(No Subject)'
             msg['From'] = f"{first_name or sender_email} <{sender_email}>"
             msg['To'] = to_email
 
             with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-                server.login(sender_email, sender_password)
+                server.login(sender_email, sender_pass)
                 server.sendmail(sender_email, to_email, msg.as_string())
             print(f"Sent to {to_email}")
         except Exception as e:
-            print(f"Failed to send to {to_email}: {e}")
+            print(f"Failed to send to {to_email}: {str(e)}")
 
-# Send route
 @app.route('/send', methods=['POST'])
-@login_required
+@require_login
 def send():
     first_name = request.form.get('firstName')
     sender_email = request.form.get('sentFrom')
-    sender_password = request.form.get('appPassword')
+    sender_pass = request.form.get('appPassword')
     subject = request.form.get('subject')
     body = request.form.get('body')
-    bulk_mails = request.form.get('bulkMails', '')
+    bulkMails = request.form.get('bulkMails', '')
 
-    if not sender_email or not sender_password:
-        return render_template('form.html', message='Sender email and password required.',
-                               count=0, bulk_count=0, formData=request.form)
-
-    recipients = [e.strip() for e in bulk_mails.replace(',', '\n').split('\n') if e.strip()]
-    recipients = list(set(recipients))  # remove duplicates
+    recipients = [email.strip() for email in bulkMails.splitlines() if email.strip()]
+    bulk_count = len(recipients)
 
     snapshot = {
-        'firstName': first_name,
-        'senderEmail': sender_email,
-        'senderAppPassword': sender_password,
+        'first_name': first_name,
+        'sender_email': sender_email,
+        'sender_pass': sender_pass,
         'subject': subject,
         'body': body,
         'recipients': recipients
     }
 
     # Start background thread
-    thread = threading.Thread(target=send_emails, args=(snapshot,))
-    thread.start()
+    Thread(target=send_emails, args=(snapshot,), daemon=True).start()
 
-    return render_template('form.html',
-                           message=f"Started sending {len(recipients)} emails in background.",
-                           count=len(recipients),
-                           bulk_count=len(recipients),
-                           formData=request.form)
+    message = f"Started sending {bulk_count} emails in background!"
+    return render_template('form.html', message=message, bulk_count=bulk_count, formData=request.form)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    app.run(debug=True)
