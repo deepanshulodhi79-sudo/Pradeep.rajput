@@ -8,8 +8,8 @@ import os
 app = Flask(__name__)
 app.secret_key = 'bulk-mailer-secret-please-change'
 
-HARD_USERNAME = 'Yatendra Rajput'
-HARD_PASSWORD = 'Yattu@882'
+HARD_USERNAME = 'Pradeep Rajput'
+HARD_PASSWORD = 'Pappu@882'
 
 EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 MAX_PER_BATCH = 30
@@ -46,7 +46,7 @@ def require_login(f):
 @app.route('/', methods=['GET'])
 @require_login
 def index():
-    return render_template('form.html', message=None, count=0, formData={})
+    return render_template('form.html', message=None, count=0, formData={}, bulk_count=0)
 
 # Send mails
 @app.route('/send', methods=['POST'])
@@ -61,7 +61,7 @@ def send():
 
     if not senderEmail or not senderAppPassword:
         return render_template('form.html', message='Sender email and app password required.',
-                               count=0, formData=request.form)
+                               count=0, formData=request.form, bulk_count=0)
 
     # Parse recipients
     recipients = [r.strip() for r in re.split(r'[\n,;]+', bulkMails) if r.strip()]
@@ -101,15 +101,19 @@ def send():
                 except Exception as e:
                     print(f"Failed to send to {to_email}: {e}")
 
+        # Calculate bulk count safely
+        bulk_count = len(validRecipients)
+
         msg_text = f"Successfully sent {sentCount} emails."
         if invalidRecipients:
             msg_text += f" Skipped {len(invalidRecipients)} invalid addresses."
 
-        return render_template('form.html', message=msg_text, count=len(recipients), formData=request.form)
+        return render_template('form.html', message=msg_text, count=len(recipients), formData=request.form, bulk_count=bulk_count)
 
     except Exception as e:
         print('Send error:', e)
-        return render_template('form.html', message=f"Error sending: {e}", count=len(recipients), formData=request.form)
+        bulk_count = len(re.findall(r'[^\s,;]+', bulkMails or ''))
+        return render_template('form.html', message=f"Error sending: {e}", count=len(recipients), formData=request.form, bulk_count=bulk_count)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=True)
