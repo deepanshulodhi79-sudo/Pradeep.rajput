@@ -1,81 +1,27 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8"/>
-  <title>Bulk Mailer</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body{padding:30px}
-    .left-col{width:48%; display:inline-block; vertical-align:top}
-    .right-col{width:48%; display:inline-block; vertical-align:top}
-  </style>
+    <title>Bulk Mailer</title>
 </head>
 <body>
-  <div class="container" style="max-width:900px">
-    <div style="float:right">
-      <a href="/logout" class="btn btn-success">Logout</a>
-    </div>
-    <h3>Bulk Mail Sender</h3>
+    <h2>Bulk Mail Sender</h2>
 
     {% if message %}
-      <div class="alert alert-info">{{ message }}</div>
+        <p><strong>{{ message }}</strong></p>
     {% endif %}
 
-    <form method="post" action="/send">
-      <div class="left-col">
-        <div class="form-group">
-          <label>First Name (Sender Name)</label>
-          <input name="firstName" class="form-control" value="{{ formData.firstName or '' }}" />
-        </div>
-
-        <div class="form-group">
-          <label>App Password (leave blank to use server env)</label>
-          <input name="appPassword" class="form-control" value="{{ formData.appPassword or '' }}" />
-        </div>
-
-        <div class="form-group">
-          <label>Body</label>
-          <textarea name="body" class="form-control" rows="10">{{ formData.body or '' }}</textarea>
-        </div>
-      </div>
-
-      <div class="right-col">
-        <div class="form-group">
-          <label>Sent From (your sender email)</label>
-          <input name="sentFrom" class="form-control" value="{{ formData.sentFrom or '' }}" />
-        </div>
-
-        <div class="form-group">
-          <label>Subject</label>
-          <input name="subject" class="form-control" value="{{ formData.subject or '' }}" />
-        </div>
-
-        <div class="form-group">
-          <label>Bulk Mails (one per line or comma separated)</label>
-          <textarea id="bulkMails" name="bulkMails" class="form-control" rows="12">{{ formData.bulkMails or '' }}</textarea>
-          <small id="bulkCount">{{ bulk_count }} IDs entered</small>
-        </div>
-      </div>
-
-      <div style="clear:both; margin-top:20px">
-        <p><strong>{{ bulk_count }}</strong> recipient mail addresses are entered</p>
-        <button class="btn btn-success">Send</button>
-      </div>
+    <form action="/send" method="post">
+        Name: <input type="text" name="firstName" value="{{ formData.firstName or '' }}"><br>
+        Sender Email: <input type="email" name="sentFrom" value="{{ formData.sentFrom or '' }}"><br>
+        App Password: <input type="password" name="appPassword"><br>
+        Subject: <input type="text" name="subject" value="{{ formData.subject or '' }}"><br>
+        Message:<br>
+        <textarea name="body">{{ formData.body or '' }}</textarea><br>
+        Bulk Emails (one per line):<br>
+        <textarea name="bulkMails">{{ formData.bulkMails or '' }}</textarea><br>
+        <button type="submit">Send Emails</button>
     </form>
-  </div>
 
-  <script>
-    const bulkArea = document.getElementById('bulkMails');
-    const bulkCount = document.getElementById('bulkCount');
-    function updateCount() {
-      const text = bulkArea.value;
-      const arr = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
-      bulkCount.textContent = arr.length + ' IDs entered';
-    }
-    if (bulkArea) {
-      bulkArea.addEventListener('input', updateCount);
-      updateCount();
-    }
-  </script>
+    <p><strong>{{ bulk_count }}</strong> recipient mail addresses are entered</p>
 </body>
 </html>
