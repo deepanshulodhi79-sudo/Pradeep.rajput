@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
 app.secret_key = 'bulk-mailer-secret-please-change'
@@ -48,6 +49,20 @@ def require_login(f):
 def index():
     return render_template('form.html', message=None, count=0, formData={}, bulk_count=0)
 
+# Function to send single email
+def send_single_email(server, snapshot, to_email):
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = f"{snapshot['firstName'] or snapshot['senderEmail']} <{snapshot['senderEmail']}>"
+        msg['To'] = to_email
+        msg['Subject'] = snapshot['subject']
+        msg.attach(MIMEText(snapshot['body'], 'plain'))
+        server.sendmail(snapshot['senderEmail'], to_email, msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Failed {to_email}: {e}")
+        return False
+
 # Send mails
 @app.route('/send', methods=['POST'])
 @require_login
@@ -88,18 +103,11 @@ def send():
             server.starttls()
             server.login(snapshot['senderEmail'], snapshot['senderAppPassword'])
 
-            for to_email in snapshot['recipients']:
-                msg = MIMEMultipart()
-                msg['From'] = f"{snapshot['firstName'] or snapshot['senderEmail']} <{snapshot['senderEmail']}>"
-                msg['To'] = to_email
-                msg['Subject'] = snapshot['subject']
-                msg.attach(MIMEText(snapshot['body'], 'plain'))
+            # Thread pool for parallel sending
+            with ThreadPoolExecutor(max_workers=5) as executor:  # 5 mails parallel
+                results = list(executor.map(lambda to: send_single_email(server, snapshot, to), snapshot['recipients']))
 
-                try:
-                    server.sendmail(snapshot['senderEmail'], to_email, msg.as_string())
-                    sentCount += 1
-                except Exception as e:
-                    print(f"Failed to send to {to_email}: {e}")
+            sentCount = sum(results)
 
         # Calculate bulk count safely
         bulk_count = len(validRecipients)
